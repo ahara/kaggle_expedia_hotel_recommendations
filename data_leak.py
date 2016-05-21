@@ -1,3 +1,4 @@
+import copy
 import csv
 import datetime
 from collections import defaultdict
@@ -64,7 +65,7 @@ def run_solution():
             if total % 10**6 == 0:
                 print('Write {} lines...'.format(total))
 
-            id = row[0]
+            event_id = row[0]
             user_location_city = row[6]
             orig_destination_distance = row[7]
             srch_destination_id = row[17]
@@ -75,54 +76,41 @@ def run_solution():
 
             s1 = (user_location_city, orig_destination_distance)
             if s1 in best_hotels_od_ulc:
-                d = best_hotels_od_ulc[s1]
-                topitems = nlargest(5, sorted(d.items()), key=itemgetter(1))
-                for i in range(len(topitems)):
-                    if topitems[i][0] in filled:
-                        continue
-                    if len(filled) == 5:
-                        break
-                    filled.append(topitems[i][0])
+                filled = find_with_add_clusters(best_hotels_od_ulc, s1, filled)
 
             s2 = (srch_destination_id, hotel_country, hotel_market)
             if s2 in best_hotels_search_dest:
-                d = best_hotels_search_dest[s2]
-                topitems = nlargest(5, d.items(), key=itemgetter(1))
-                for i in range(len(topitems)):
-                    if topitems[i][0] in filled:
-                        continue
-                    if len(filled) == 5:
-                        break
-                    filled.append(topitems[i][0])
+                filled = find_with_add_clusters(best_hotels_search_dest, s2, filled)
             elif srch_destination_id in best_hotels_search_dest1:
-                d = best_hotels_search_dest1[srch_destination_id]
-                topitems = nlargest(5, d.items(), key=itemgetter(1))
-                for i in range(len(topitems)):
-                    if topitems[i][0] in filled:
-                        continue
-                    if len(filled) == 5:
-                        break
-                    filled.append(topitems[i][0])
+                filled = find_with_add_clusters(best_hotels_search_dest1, srch_destination_id, filled)
 
             if hotel_country in best_hotel_country:
-                d = best_hotel_country[hotel_country]
-                topitems = nlargest(5, d.items(), key=itemgetter(1))
-                for i in range(len(topitems)):
-                    if topitems[i][0] in filled:
-                        continue
-                    if len(filled) == 5:
-                        break
-                    filled.append(topitems[i][0])
+                filled = find_with_add_clusters(best_hotel_country, hotel_country, filled)
 
-            for i in range(len(topclasters)):
-                if topclasters[i][0] in filled:
-                    continue
-                if len(filled) == 5:
-                    break
-                filled.append(topclasters[i][0])
+            filled = add_clusters(topclasters, filled)
 
-            writer.writerow([id, ' '.join(filled)])
+            writer.writerow([event_id, ' '.join(filled)])
 
     print('Completed!')
 
-run_solution()
+
+def find_with_add_clusters(dict_data, key, current_clusters):
+    d = dict_data[key]
+    top_items = nlargest(5, d.items(), key=itemgetter(1))
+
+    return add_clusters(top_items, current_clusters)
+
+
+def add_clusters(potential_clusters, current_clusters):
+    new_current_clusters = copy.copy(current_clusters)
+    for i in xrange(len(potential_clusters)):
+        if len(new_current_clusters) >= 5:
+            break
+        if potential_clusters[i][0] not in new_current_clusters:
+            new_current_clusters.append(potential_clusters[i][0])
+
+    return new_current_clusters
+
+
+if __name__ == '__main__':
+    run_solution()
