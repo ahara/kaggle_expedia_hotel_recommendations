@@ -89,7 +89,6 @@ def build_model(input_file, feature_names, max_chunks=None, chunk_size=10**5):
     cPickle.dump(best_ntrees, open('best_ntrees', 'w'))
 
 
-
 def make_predictions(input_file, feature_names, model_path, output_file):
     """
     Loads already trained model and generate predictions of top n hotel
